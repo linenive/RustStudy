@@ -5,6 +5,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, HelloPlugin));
+    app.register_type::<Name>(); // 인스펙터에 표시하기 위해 Name 타입을 등록
 
     #[cfg(feature = "debug")]
     // Debug hierarchy inspector
@@ -23,7 +24,7 @@ fn camera_setup(mut commands: Commands) {
 #[derive(Component)]
 struct Person;
 
-#[derive(Component)]
+#[derive(Reflect, Component)]
 struct Name(String);
 
 fn add_people(mut commands: Commands) {
