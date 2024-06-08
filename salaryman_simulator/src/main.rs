@@ -1,9 +1,23 @@
 use bevy::prelude::*;
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
-    App::new()
-        .add_plugins((DefaultPlugins, HelloPlugin))
-        .run();
+    let mut app = App::new();
+    app.add_plugins((DefaultPlugins, HelloPlugin));
+
+    #[cfg(feature = "debug")]
+    // Debug hierarchy inspector
+    app.add_plugins(WorldInspectorPlugin::new());
+    // Startup system (cameras)
+    app.add_systems(Startup, camera_setup);
+    // Run the app
+    app.run();
+}
+
+fn camera_setup(mut commands: Commands) {
+    // 2D orthographic camera
+    commands.spawn(Camera2dBundle::default());
 }
 
 #[derive(Component)]

@@ -3,5 +3,19 @@ name = "salaryman_simulator"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+debug = ["board_plugin/debug", "bevy-inspector-egui"]
+bevy-inspector-egui = ["dep:bevy-inspector-egui"]
+
 [dependencies]
 bevy = "0.13.2"
+board_plugin = { path = "board_plugin" }
+
+# Hierarchy inspector debug
+bevy-inspector-egui = { version = "0.24", optional = true }
+
+[workspace]
+members = [
+    "board_plugin"
+]
