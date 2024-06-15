@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+};
+
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -11,13 +15,18 @@ fn main() {
     // Debug hierarchy inspector
     app.add_plugins(WorldInspectorPlugin::new());
     // Startup system (cameras)
-    app.add_systems(Startup, camera_setup);
+    app.add_systems(Startup, sprite_setup);
     // Run the app
     app.run();
 }
 
-fn camera_setup(mut commands: Commands) {
-    // 2D orthographic camera
+const X_EXTENT: f32 = 600.;
+
+fn sprite_setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     commands.spawn(Camera2dBundle::default());
 }
 
@@ -31,6 +40,29 @@ fn add_people(mut commands: Commands) {
     commands.spawn((Person, Name("Elaina Proctor".to_string())));
     commands.spawn((Person, Name("Renzo Hume".to_string())));
     commands.spawn((Person, Name("Zayna Nieves".to_string())));
+}
+
+#[derive(Component)]
+struct Player;
+
+fn add_player(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
+    let color = Color::hsl(0.0, 0.95, 0.7);
+    commands.spawn((
+        Player,
+        Person,
+        Name("Player".to_string()),
+        MaterialMesh2dBundle {
+            mesh: shape,
+            material: materials.add(color),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
 }
 
 #[derive(Resource)]
@@ -64,7 +96,7 @@ pub struct HelloPlugin;
 impl Plugin for HelloPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-            .add_systems(Startup, add_people)
+            .add_systems(Startup, (add_player, add_people))
             .add_systems(Update, (update_people, greet_people).chain());
     }
 }
