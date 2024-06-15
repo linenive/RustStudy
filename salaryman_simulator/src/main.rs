@@ -51,7 +51,7 @@ fn add_desk(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let shape = Mesh2dHandle(meshes.add((Rectangle::new(50.0, 100.0))));
+    let shape = Mesh2dHandle(meshes.add(Rectangle::new(50.0, 100.0)));
     let color = Color::hsl(0.0, 0.0, 0.5);
     commands.spawn((
         Desk,
@@ -63,6 +63,20 @@ fn add_desk(
             ..default()
         },
     ));
+}
+
+fn add_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(TextBundle {
+        text: Text::from_section(
+            "안녕하세요, Bevy!",
+            TextStyle {
+                font_size: 60.0,
+                color: Color::WHITE,
+                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+            },
+        ),
+        ..Default::default()
+    });
 }
 
 fn add_people(mut commands: Commands) {
@@ -151,7 +165,10 @@ pub struct HelloPlugin;
 impl Plugin for HelloPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-            .add_systems(Startup, (add_player, add_people, add_desk).chain())
+            .add_systems(
+                Startup,
+                (add_player, add_people, add_desk, add_text).chain(),
+            )
             .add_systems(Update, (update_people, greet_people).chain());
     }
 }
