@@ -65,18 +65,29 @@ fn add_desk(
     ));
 }
 
+#[derive(Component)]
+struct InteractionHintUI {
+    text: String,
+}
+
 fn add_text(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(TextBundle {
-        text: Text::from_section(
-            "안녕하세요, Bevy!",
-            TextStyle {
-                font_size: 60.0,
-                color: Color::WHITE,
-                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
-            },
-        ),
-        ..Default::default()
-    });
+    commands.spawn((
+        TextBundle {
+            text: Text::from_section(
+                "안녕하세요, Bevy!",
+                TextStyle {
+                    font_size: 60.0,
+                    color: Color::WHITE,
+                    font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                },
+            ),
+            visibility: Visibility::Hidden,
+            ..Default::default()
+        },
+        InteractionHintUI {
+            text: "[E]를 눌러 상호작용하기".to_string(),
+        },
+    ));
 }
 
 fn add_people(mut commands: Commands) {
@@ -160,6 +171,38 @@ fn player_movement(
     }
 }
 
+fn player_check_collision(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform, &Person), With<Player>>,
+    desk_query: Query<(Entity, &Transform), With<Desk>>,
+    mut interaction_hint: Query<(&mut Visibility, &mut Text, &InteractionHintUI)>,
+) {
+    for (player_entity, player_transform, player) in query.iter() {
+        for (desk_entity, desk_transform) in desk_query.iter() {
+            let distance = player_transform
+                .translation
+                .distance(desk_transform.translation);
+            println!("Distance: {}", distance);
+            if distance < 60.0 {
+                for (mut visibility, mut text, hint) in interaction_hint.iter_mut() {
+                    if *visibility != Visibility::Visible {
+                        *visibility = Visibility::Visible;
+                        text.sections[0].value = hint
+                            .text
+                            .clone();
+                    }
+                }
+            } else {
+                for (mut visibility, mut text, hint) in interaction_hint.iter_mut() {
+                    if *visibility == Visibility::Visible {
+                        *visibility = Visibility::Hidden;
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -169,6 +212,9 @@ impl Plugin for HelloPlugin {
                 Startup,
                 (add_player, add_people, add_desk, add_text).chain(),
             )
-            .add_systems(Update, (update_people, greet_people).chain());
+            .add_systems(
+                Update,
+                (update_people, greet_people, player_check_collision).chain(),
+            );
     }
 }
