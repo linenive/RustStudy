@@ -10,8 +10,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, HelloPlugin));
-    app.register_type::<Name>(); // 인스펙터에 표시하기 위해 Name 타입을 등록
-    app.register_type::<Person>();
+    app.register_type::<Person>(); // 인스펙터에 표시하기 위해 Person 타입을 등록
 
     #[cfg(feature = "debug")]
     // Debug hierarchy inspector
@@ -56,6 +55,7 @@ fn add_desk(
     let color = Color::hsl(0.0, 0.0, 0.5);
     commands.spawn((
         Desk,
+        Name::new("Desk"),
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),
@@ -65,13 +65,10 @@ fn add_desk(
     ));
 }
 
-#[derive(Reflect, Component)]
-struct Name(String);
-
 fn add_people(mut commands: Commands) {
-    commands.spawn((Person::default(), Name("Elaina Proctor".to_string())));
-    commands.spawn((Person::default(), Name("Renzo Hume".to_string())));
-    commands.spawn((Person::default(), Name("Zayna Nieves".to_string())));
+    commands.spawn((Person::default(), Name::new("Elaina Proctor")));
+    commands.spawn((Person::default(), Name::new("Renzo Hume")));
+    commands.spawn((Person::default(), Name::new("Zayna Nieves")));
 }
 
 #[derive(Component)]
@@ -87,7 +84,7 @@ fn add_player(
     commands.spawn((
         Player,
         Person::default(),
-        Name("Player".to_string()),
+        Name::new("Player"),
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),
@@ -109,15 +106,15 @@ fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Na
         .just_finished()
     {
         for name in &query {
-            println!("hello {}!", name.0);
+            println!("hello {}!", name.as_str());
         }
     }
 }
 
 fn update_people(mut query: Query<&mut Name, With<Person>>) {
     for mut name in &mut query {
-        if name.0 == "Elaina Proctor" {
-            name.0 = "Elaina Hume".to_string();
+        if name.as_str() == "Elaina Proctor" {
+            name.set("Elaina Hume");
             break; // We don’t need to change any other names
         }
     }
