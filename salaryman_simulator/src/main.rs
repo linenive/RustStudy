@@ -44,6 +44,27 @@ impl Default for Person {
     }
 }
 
+#[derive(Component)]
+struct Desk;
+
+fn add_desk(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let shape = Mesh2dHandle(meshes.add((Rectangle::new(50.0, 100.0))));
+    let color = Color::hsl(0.0, 0.0, 0.5);
+    commands.spawn((
+        Desk,
+        MaterialMesh2dBundle {
+            mesh: shape,
+            material: materials.add(color),
+            transform: Transform::from_xyz(0.0, -200.0, 0.0),
+            ..default()
+        },
+    ));
+}
+
 #[derive(Reflect, Component)]
 struct Name(String);
 
@@ -61,7 +82,7 @@ fn add_player(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let shape = Mesh2dHandle(meshes.add(Circle { radius: 50.0 }));
+    let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
     let color = Color::hsl(0.0, 0.95, 0.7);
     commands.spawn((
         Player,
@@ -133,7 +154,7 @@ pub struct HelloPlugin;
 impl Plugin for HelloPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-            .add_systems(Startup, (add_player, add_people))
+            .add_systems(Startup, (add_player, add_people, add_desk).chain())
             .add_systems(Update, (update_people, greet_people).chain());
     }
 }
