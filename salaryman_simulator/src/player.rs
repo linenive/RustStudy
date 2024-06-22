@@ -17,9 +17,9 @@ impl Default for Player {
 
 pub fn player_movement(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Transform, &Person), With<Player>>,
+    mut query: Query<(&mut Transform, &mut Person, &Player)>,
 ) {
-    for (mut transform, player) in query.iter_mut() {
+    for (mut transform, mut person, player) in query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
         if keyboard_input.pressed(KeyCode::KeyW) {
@@ -34,10 +34,14 @@ pub fn player_movement(
         if keyboard_input.pressed(KeyCode::KeyD) {
             direction.x += 1.0;
         }
-        if keyboard_input.pressed(KeyCode::KeyE) {}
+        if keyboard_input.pressed(KeyCode::KeyE) {
+            if player.is_interactable {
+                person.san -= 10;
+            }
+        }
 
         if direction.length_squared() > 0.0 {
-            transform.translation += direction.normalize() * player.speed * 0.02;
+            transform.translation += direction.normalize() * person.speed * 0.02;
         }
     }
 }
