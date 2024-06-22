@@ -1,11 +1,16 @@
 use bevy::{
-    input::*,
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
+pub mod components;
+pub mod player;
+
+use components::{Desk, InteractionHintUI, Person};
+use player::Player;
 
 fn main() {
     let mut app = App::new();
@@ -17,34 +22,34 @@ fn main() {
     app.add_plugins(WorldInspectorPlugin::new());
     // Startup system (cameras)
     app.add_systems(Startup, sprite_setup);
-    app.add_systems(Update, player_movement);
+    app.add_systems(Update, player::player_movement);
     // Run the app
     app.run();
 }
 
-const X_EXTENT: f32 = 600.;
+fn sprite_setup(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+}
 
-fn sprite_setup(
+fn add_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    commands.spawn(Camera2dBundle::default());
+    let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
+    let color = Color::hsl(0.0, 0.95, 0.7);
+    commands.spawn((
+        Player,
+        Person::default(),
+        Name::new("Player"),
+        MaterialMesh2dBundle {
+            mesh: shape,
+            material: materials.add(color),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
 }
-
-#[derive(Reflect, Component)]
-struct Person {
-    speed: f32,
-}
-
-impl Default for Person {
-    fn default() -> Self {
-        Person { speed: 200.0 }
-    }
-}
-
-#[derive(Component)]
-struct Desk;
 
 fn add_desk(
     mut commands: Commands,
@@ -63,11 +68,6 @@ fn add_desk(
             ..default()
         },
     ));
-}
-
-#[derive(Component)]
-struct InteractionHintUI {
-    text: String,
 }
 
 fn add_text(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -96,29 +96,6 @@ fn add_people(mut commands: Commands) {
     commands.spawn((Person::default(), Name::new("Zayna Nieves")));
 }
 
-#[derive(Component)]
-struct Player;
-
-fn add_player(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
-    let color = Color::hsl(0.0, 0.95, 0.7);
-    commands.spawn((
-        Player,
-        Person::default(),
-        Name::new("Player"),
-        MaterialMesh2dBundle {
-            mesh: shape,
-            material: materials.add(color),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        },
-    ));
-}
-
 #[derive(Resource)]
 struct GreetTimer(Timer);
 
@@ -145,64 +122,6 @@ fn update_people(mut query: Query<&mut Name, With<Person>>) {
     }
 }
 
-fn player_movement(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Transform, &Person), With<Player>>,
-) {
-    for (mut transform, player) in query.iter_mut() {
-        let mut direction = Vec3::ZERO;
-
-        if keyboard_input.pressed(KeyCode::KeyW) {
-            direction.y += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyA) {
-            direction.x -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyS) {
-            direction.y -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyD) {
-            direction.x += 1.0;
-        }
-
-        if direction.length_squared() > 0.0 {
-            transform.translation += direction.normalize() * player.speed * 0.02;
-        }
-    }
-}
-
-fn player_check_collision(
-    mut commands: Commands,
-    query: Query<(Entity, &Transform, &Person), With<Player>>,
-    desk_query: Query<(Entity, &Transform), With<Desk>>,
-    mut interaction_hint: Query<(&mut Visibility, &mut Text, &InteractionHintUI)>,
-) {
-    for (player_entity, player_transform, player) in query.iter() {
-        for (desk_entity, desk_transform) in desk_query.iter() {
-            let distance = player_transform
-                .translation
-                .distance(desk_transform.translation);
-            println!("Distance: {}", distance);
-            if distance < 60.0 {
-                for (mut visibility, mut text, hint) in interaction_hint.iter_mut() {
-                    if *visibility != Visibility::Visible {
-                        *visibility = Visibility::Visible;
-                        text.sections[0].value = hint
-                            .text
-                            .clone();
-                    }
-                }
-            } else {
-                for (mut visibility, mut text, hint) in interaction_hint.iter_mut() {
-                    if *visibility == Visibility::Visible {
-                        *visibility = Visibility::Hidden;
-                    }
-                }
-            }
-        }
-    }
-}
-
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -214,7 +133,7 @@ impl Plugin for HelloPlugin {
             )
             .add_systems(
                 Update,
-                (update_people, greet_people, player_check_collision).chain(),
+                (update_people, greet_people, player::player_check_collision).chain(),
             );
     }
 }
