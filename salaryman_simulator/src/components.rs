@@ -21,6 +21,9 @@ impl Default for Person {
 pub struct Desk;
 
 #[derive(Component)]
+pub struct Interactable;
+
+#[derive(Component)]
 pub struct InteractionHintUI {
     pub text: String,
 }

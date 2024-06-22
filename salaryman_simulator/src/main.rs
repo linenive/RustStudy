@@ -9,7 +9,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub mod components;
 pub mod player;
 
-use components::{Desk, InteractionHintUI, Person, StatusHUD};
+use components::{Desk, Interactable, InteractionHintUI, Person, StatusHUD};
 use player::Player;
 
 fn main() {
@@ -39,7 +39,7 @@ fn add_player(
     let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
     let color = Color::hsl(0.0, 0.95, 0.7);
     commands.spawn((
-        Player,
+        Player::default(),
         Person::default(),
         Name::new("Player"),
         MaterialMesh2dBundle {
@@ -60,6 +60,7 @@ fn add_desk(
     let color = Color::hsl(0.0, 0.0, 0.5);
     commands.spawn((
         Desk,
+        Interactable,
         Name::new("Desk"),
         MaterialMesh2dBundle {
             mesh: shape,
@@ -146,7 +147,7 @@ fn update_people(mut query: Query<&mut Name, With<Person>>) {
 
 fn update_hud(
     mut query: Query<&mut Text, With<StatusHUD>>,
-    mut player_query: Query<&Person, With<Player>>,
+    player_query: Query<&Person, With<Player>>,
 ) {
     for mut _text in query.iter_mut() {
         for player in player_query.iter() {
