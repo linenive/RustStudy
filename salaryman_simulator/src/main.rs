@@ -9,7 +9,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub mod components;
 pub mod player;
 
-use components::{Desk, InteractionHintUI, Person};
+use components::{Desk, InteractionHintUI, Person, StatusHUD};
 use player::Player;
 
 fn main() {
@@ -90,6 +90,28 @@ fn add_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
+fn add_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        TextBundle::from_section(
+            "",
+            TextStyle {
+                font_size: 20.0,
+                color: Color::WHITE,
+                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                ..Default::default()
+            },
+        )
+        .with_text_justify(JustifyText::Right)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            right: Val::Px(10.0),
+            top: Val::Px(10.0),
+            ..Default::default()
+        }),
+        StatusHUD,
+    ));
+}
+
 fn add_people(mut commands: Commands) {
     commands.spawn((Person::default(), Name::new("Elaina Proctor")));
     commands.spawn((Person::default(), Name::new("Renzo Hume")));
@@ -122,6 +144,17 @@ fn update_people(mut query: Query<&mut Name, With<Person>>) {
     }
 }
 
+fn update_hud(
+    mut query: Query<&mut Text, With<StatusHUD>>,
+    mut player_query: Query<&Person, With<Player>>,
+) {
+    for mut _text in query.iter_mut() {
+        for player in player_query.iter() {
+            _text.sections[0].value = format!("체력: {}\n정신력: {}", player.hp, player.san);
+        }
+    }
+}
+
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -129,11 +162,17 @@ impl Plugin for HelloPlugin {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_systems(
                 Startup,
-                (add_player, add_people, add_desk, add_text).chain(),
+                (add_player, add_people, add_desk, add_text, add_hud).chain(),
             )
             .add_systems(
                 Update,
-                (update_people, greet_people, player::player_check_collision).chain(),
+                (
+                    update_people,
+                    greet_people,
+                    player::player_check_collision,
+                    update_hud,
+                )
+                    .chain(),
             );
     }
 }
