@@ -1,6 +1,6 @@
 use bevy::{input::*, prelude::*};
 
-use crate::components::{Interactable, InteractionHintUI, Person};
+use crate::components::{Interactable, InteractionHintUI, Person, PopUpUI};
 
 #[derive(Component)]
 pub struct Player {
@@ -74,6 +74,24 @@ pub fn player_check_collision(
                     }
                 }
                 player.is_interactable = false;
+            }
+        }
+    }
+}
+
+pub fn dead_player(
+    query: Query<(Entity, &Person), With<Player>>,
+    mut pop_up_ui: Query<(&mut Visibility, &mut Text, &PopUpUI)>,
+) {
+    for (_, person) in query.iter() {
+        if person.is_dead {
+            for (mut visibility, mut _text, _pop_up) in pop_up_ui.iter_mut() {
+                if *visibility != Visibility::Visible {
+                    *visibility = Visibility::Visible;
+                    _text.sections[0].value = _pop_up
+                        .text
+                        .clone();
+                }
             }
         }
     }

@@ -9,7 +9,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub mod components;
 pub mod player;
 
-use components::{Desk, Interactable, InteractionHintUI, Person, StatusHUD};
+use components::{Desk, Interactable, InteractionHintUI, Person, PopUpUI, StatusHUD};
 use player::Player;
 
 fn main() {
@@ -67,6 +67,28 @@ fn add_desk(
             material: materials.add(color),
             transform: Transform::from_xyz(0.0, -200.0, 0.0),
             ..default()
+        },
+    ));
+}
+
+fn add_pop_up(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        TextBundle::from_section(
+            "",
+            TextStyle {
+                font_size: 60.0,
+                color: Color::WHITE,
+                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                ..Default::default()
+            },
+        )
+        .with_style(Style {
+            align_self: AlignSelf::Center,
+            margin: UiRect::all(Val::Auto),
+            ..Default::default()
+        }),
+        PopUpUI {
+            text: "당신은 죽었습니다.".to_string(),
         },
     ));
 }
@@ -162,7 +184,10 @@ impl Plugin for HelloPlugin {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_systems(
                 Startup,
-                (add_player, add_people, add_desk, add_text, add_hud).chain(),
+                (
+                    add_player, add_people, add_desk, add_text, add_hud, add_pop_up,
+                )
+                    .chain(),
             )
             .add_systems(
                 Update,
@@ -171,6 +196,7 @@ impl Plugin for HelloPlugin {
                     greet_people,
                     player::player_check_collision,
                     update_hud,
+                    player::dead_player,
                 )
                     .chain(),
             );

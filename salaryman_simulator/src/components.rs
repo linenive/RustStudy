@@ -31,4 +31,9 @@ pub struct InteractionHintUI {
 }
 
 #[derive(Component)]
+pub struct PopUpUI {
+    pub text: String,
+}
+
+#[derive(Component)]
 pub struct StatusHUD;
