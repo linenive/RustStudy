@@ -11,6 +11,7 @@ bevy-inspector-egui = ["dep:bevy-inspector-egui"]
 [dependencies]
 bevy = "0.13.2"
 board_plugin = { path = "board_plugin" }
+rand = "0.8"
 
 # Hierarchy inspector debug
 bevy-inspector-egui = { version = "0.24", optional = true }

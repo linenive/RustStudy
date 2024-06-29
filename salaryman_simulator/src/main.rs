@@ -1,7 +1,6 @@
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-    transform,
 };
 
 #[cfg(feature = "debug")]
@@ -47,6 +46,31 @@ fn add_player(
             mesh: shape,
             material: materials.add(color),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+}
+
+fn add_person(
+    name: &str,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
+) {
+    let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
+    let color = Color::hsl(40.0, 0.35, 0.7);
+    let random_transform = Transform::from_xyz(
+        rand::random::<f32>() * 800.0 - 400.0,
+        rand::random::<f32>() * 800.0 - 400.0,
+        0.0,
+    );
+    commands.spawn((
+        Person::default(),
+        Name::new(name.to_string()),
+        MaterialMesh2dBundle {
+            mesh: shape,
+            material: materials.add(color),
+            transform: random_transform,
             ..default()
         },
     ));
@@ -136,10 +160,14 @@ fn add_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-fn add_people(mut commands: Commands) {
-    commands.spawn((Person::default(), Name::new("Elaina Proctor")));
-    commands.spawn((Person::default(), Name::new("Renzo Hume")));
-    commands.spawn((Person::default(), Name::new("Zayna Nieves")));
+fn add_people(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    add_person("Alice", &mut commands, &mut meshes, &mut materials);
+    add_person("Bob", &mut commands, &mut meshes, &mut materials);
+    add_person("Charlie", &mut commands, &mut meshes, &mut materials);
 }
 
 #[derive(Resource)]
