@@ -169,10 +169,17 @@ fn update_people(mut query: Query<&mut Person>) {
 fn update_hud(
     mut query: Query<&mut Text, With<StatusHUD>>,
     player_query: Query<&Person, With<Player>>,
+    time: Res<Time>,
 ) {
     for mut _text in query.iter_mut() {
         for player in player_query.iter() {
             _text.sections[0].value = format!("체력: {}\n정신력: {}", player.hp, player.san);
+            _text.sections[0]
+                .value
+                .push_str(&format!(
+                    "\n지난 시간: {:.2}",
+                    time.elapsed_seconds() as f32
+                ));
         }
     }
 }
