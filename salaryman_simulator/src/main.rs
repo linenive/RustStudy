@@ -136,11 +136,10 @@ fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Na
     }
 }
 
-fn update_people(mut query: Query<&mut Name, With<Person>>) {
-    for mut name in &mut query {
-        if name.as_str() == "Elaina Proctor" {
-            name.set("Elaina Hume");
-            break; // We don’t need to change any other names
+fn update_people(mut query: Query<&mut Person>) {
+    for mut person in &mut query {
+        if person.hp <= 0 || person.san <= 0 {
+            person.is_dead = true;
         }
     }
 }

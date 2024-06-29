@@ -5,6 +5,7 @@ pub struct Person {
     pub speed: f32,
     pub hp: i32,
     pub san: i32,
+    pub is_dead: bool,
 }
 
 impl Default for Person {
@@ -13,6 +14,7 @@ impl Default for Person {
             speed: 200.0,
             hp: 100,
             san: 100,
+            is_dead: false,
         }
     }
 }
