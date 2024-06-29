@@ -1,6 +1,7 @@
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+    transform,
 };
 
 #[cfg(feature = "debug")]
@@ -184,6 +185,27 @@ fn update_hud(
     }
 }
 
+fn update_pop_up(mut query: Query<(&mut Text, &mut Transform), With<PopUpUI>>, time: Res<Time>) {
+    for (mut _text, mut _transform) in query.iter_mut() {
+        let million = time.elapsed_seconds() % 8.0;
+        if million < 4.0 {
+            let scale = ((time.elapsed_seconds() * 30.0).sin() + 2.1) * 1.0;
+            _transform
+                .scale
+                .x = scale;
+            _transform
+                .scale
+                .y = scale;
+        } else {
+            _text.sections[0]
+                .style
+                .color = Color::RED;
+            // 회전
+            _transform.rotation = Quat::from_rotation_z((time.elapsed_seconds() * 2.0).tan());
+        }
+    }
+}
+
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -203,6 +225,7 @@ impl Plugin for HelloPlugin {
                     greet_people,
                     player::player_check_collision,
                     update_hud,
+                    update_pop_up,
                     player::dead_player,
                 )
                     .chain(),
