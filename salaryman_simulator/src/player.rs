@@ -1,6 +1,7 @@
 use bevy::{input::*, prelude::*};
 
-use crate::components::{Interactable, InteractionHintUI, Person, PopUpUI};
+use crate::components::{Interactable, Person};
+use crate::gui::components::{InteractionHintUI, PopUpUI};
 
 #[derive(Component)]
 pub struct Player {

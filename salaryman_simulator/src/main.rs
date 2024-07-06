@@ -7,11 +7,11 @@ use bevy::{
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod components;
+pub mod gui;
 pub mod player;
 
-use components::{
-    Desk, Interactable, InteractionHintUI, Person, PopUpUI, Salary, StatusHUD, Worker,
-};
+use components::{Desk, Interactable, Person, Salary, Worker};
+use gui::components::StatusHUD;
 use player::Player;
 
 fn main() {
@@ -109,70 +109,6 @@ fn add_desk(
     ));
 }
 
-fn add_pop_up(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 60.0,
-                color: Color::WHITE,
-                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
-                ..Default::default()
-            },
-        )
-        .with_style(Style {
-            align_self: AlignSelf::Center,
-            margin: UiRect::all(Val::Auto),
-            ..Default::default()
-        }),
-        PopUpUI {
-            text: "당신은 죽었습니다.".to_string(),
-        },
-    ));
-}
-
-fn add_text(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        TextBundle {
-            text: Text::from_section(
-                "안녕하세요, Bevy!",
-                TextStyle {
-                    font_size: 60.0,
-                    color: Color::WHITE,
-                    font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
-                },
-            ),
-            visibility: Visibility::Hidden,
-            ..Default::default()
-        },
-        InteractionHintUI {
-            text: "[E]를 눌러 상호작용하기".to_string(),
-        },
-    ));
-}
-
-fn add_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 20.0,
-                color: Color::WHITE,
-                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
-                ..Default::default()
-            },
-        )
-        .with_text_justify(JustifyText::Right)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            right: Val::Px(10.0),
-            top: Val::Px(10.0),
-            ..Default::default()
-        }),
-        StatusHUD,
-    ));
-}
-
 fn add_people(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -208,6 +144,7 @@ fn update_people(mut query: Query<&mut Person>) {
     }
 }
 
+// 캐릭터의 상태를 표시하는 HUD
 fn update_hud(
     mut query: Query<&mut Text, With<StatusHUD>>,
     player_query: Query<&Person, With<Player>>,
@@ -226,27 +163,6 @@ fn update_hud(
     }
 }
 
-fn update_pop_up(mut query: Query<(&mut Text, &mut Transform), With<PopUpUI>>, time: Res<Time>) {
-    for (mut _text, mut _transform) in query.iter_mut() {
-        let million = time.elapsed_seconds() % 8.0;
-        if million < 4.0 {
-            let scale = ((time.elapsed_seconds() * 30.0).sin() + 2.1) * 1.0;
-            _transform
-                .scale
-                .x = scale;
-            _transform
-                .scale
-                .y = scale;
-        } else {
-            _text.sections[0]
-                .style
-                .color = Color::RED;
-            // 회전
-            _transform.rotation = Quat::from_rotation_z((time.elapsed_seconds() * 2.0).tan());
-        }
-    }
-}
-
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -254,10 +170,7 @@ impl Plugin for HelloPlugin {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_systems(
                 Startup,
-                (
-                    add_player, add_people, add_desk, add_text, add_hud, add_pop_up,
-                )
-                    .chain(),
+                (add_player, add_people, add_desk, gui::add_gui).chain(),
             )
             .add_systems(
                 Update,
@@ -266,7 +179,7 @@ impl Plugin for HelloPlugin {
                     greet_people,
                     player::player_check_collision,
                     update_hud,
-                    update_pop_up,
+                    gui::update_pop_up,
                     player::dead_player,
                 )
                     .chain(),
