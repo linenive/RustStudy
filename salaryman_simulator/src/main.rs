@@ -170,7 +170,14 @@ impl Plugin for HelloPlugin {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_systems(
                 Startup,
-                (add_player, add_people, add_desk, gui::add_gui).chain(),
+                (
+                    add_player,
+                    add_people,
+                    add_desk,
+                    gui::setup_font,
+                    gui::add_gui,
+                )
+                    .chain(),
             )
             .add_systems(
                 Update,

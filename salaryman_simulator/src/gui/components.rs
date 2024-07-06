@@ -12,3 +12,8 @@ pub struct PopUpUI {
 
 #[derive(Component)]
 pub struct StatusHUD;
+
+#[derive(Component)]
+pub struct ChoiceUI {
+    pub choices: Vec<String>,
+}

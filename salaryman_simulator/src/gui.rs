@@ -4,10 +4,19 @@ pub mod components;
 
 use components::{InteractionHintUI, PopUpUI, StatusHUD};
 
-pub fn add_gui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    add_text(&mut commands, &asset_server);
-    add_hud(&mut commands, &asset_server);
-    add_pop_up(&mut commands, &asset_server);
+#[derive(Resource)]
+pub struct MyFont(Handle<Font>);
+
+pub fn setup_font(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf");
+
+    commands.insert_resource(MyFont(font));
+}
+
+pub fn add_gui(mut commands: Commands, font: Res<MyFont>) {
+    add_text(&mut commands, &font);
+    add_hud(&mut commands, &font);
+    add_pop_up(&mut commands, &font);
 }
 
 // 게임 오버 팝업을 업데이트
@@ -36,14 +45,16 @@ pub fn update_pop_up(
 }
 
 // 게임오버 팝업을 추가
-fn add_pop_up(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+fn add_pop_up(commands: &mut Commands, font: &Res<MyFont>) {
     commands.spawn((
         TextBundle::from_section(
             "",
             TextStyle {
                 font_size: 60.0,
                 color: Color::WHITE,
-                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                font: font
+                    .0
+                    .clone(),
                 ..Default::default()
             },
         )
@@ -59,7 +70,7 @@ fn add_pop_up(commands: &mut Commands, asset_server: &Res<AssetServer>) {
 }
 
 // 상호작용 힌트를 추가
-fn add_text(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+fn add_text(commands: &mut Commands, font: &Res<MyFont>) {
     commands.spawn((
         TextBundle {
             text: Text::from_section(
@@ -67,7 +78,9 @@ fn add_text(commands: &mut Commands, asset_server: &Res<AssetServer>) {
                 TextStyle {
                     font_size: 60.0,
                     color: Color::WHITE,
-                    font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                    font: font
+                        .0
+                        .clone(),
                 },
             ),
             visibility: Visibility::Hidden,
@@ -80,14 +93,40 @@ fn add_text(commands: &mut Commands, asset_server: &Res<AssetServer>) {
 }
 
 // 캐릭터의 상태를 표시하는 HUD를 추가
-fn add_hud(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+fn add_hud(commands: &mut Commands, font: &Res<MyFont>) {
     commands.spawn((
         TextBundle::from_section(
             "",
             TextStyle {
                 font_size: 20.0,
                 color: Color::WHITE,
-                font: asset_server.load("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+                font: font
+                    .0
+                    .clone(),
+                ..Default::default()
+            },
+        )
+        .with_text_justify(JustifyText::Right)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            right: Val::Px(10.0),
+            top: Val::Px(10.0),
+            ..Default::default()
+        }),
+        StatusHUD,
+    ));
+}
+
+fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
+    commands.spawn((
+        TextBundle::from_section(
+            "",
+            TextStyle {
+                font_size: 20.0,
+                color: Color::WHITE,
+                font: font
+                    .0
+                    .clone(),
                 ..Default::default()
             },
         )
