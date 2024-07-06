@@ -20,6 +20,12 @@ impl Default for Person {
 }
 
 #[derive(Reflect, Component)]
+pub struct InteractionTarget {
+    pub is_interactable: bool,
+    pub target: Entity,
+}
+
+#[derive(Reflect, Component)]
 pub struct Worker {
     pub salary: Salary,
 }

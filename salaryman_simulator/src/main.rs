@@ -10,7 +10,7 @@ pub mod components;
 pub mod gui;
 pub mod player;
 
-use components::{Desk, Interactable, Person, Salary, Worker};
+use components::{Desk, Interactable, InteractionTarget, Person, Salary, Worker};
 use gui::components::StatusHUD;
 use player::Player;
 
@@ -36,6 +36,16 @@ fn sprite_setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
+fn add_system_entity(mut commands: Commands) {
+    commands.spawn((
+        Name::new("InteractTarget"),
+        InteractionTarget {
+            is_interactable: false,
+            target: Entity::PLACEHOLDER,
+        },
+    ));
+}
+
 fn add_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -44,7 +54,7 @@ fn add_player(
     let shape = Mesh2dHandle(meshes.add(Circle { radius: 20.0 }));
     let color = Color::hsl(0.0, 0.95, 0.7);
     commands.spawn((
-        Player::default(),
+        Player,
         Person::default(),
         Name::new("Player"),
         Worker::default(),
@@ -80,6 +90,7 @@ fn add_person(
         Worker {
             salary: random_salary,
         },
+        Interactable,
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),
@@ -171,6 +182,7 @@ impl Plugin for HelloPlugin {
             .add_systems(
                 Startup,
                 (
+                    add_system_entity,
                     add_player,
                     add_people,
                     add_desk,
