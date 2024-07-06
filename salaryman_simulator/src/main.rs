@@ -9,13 +9,18 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub mod components;
 pub mod player;
 
-use components::{Desk, Interactable, InteractionHintUI, Person, PopUpUI, StatusHUD};
+use components::{
+    Desk, Interactable, InteractionHintUI, Person, PopUpUI, Salary, StatusHUD, Worker,
+};
 use player::Player;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, HelloPlugin));
-    app.register_type::<Person>(); // 인스펙터에 표시하기 위해 Person 타입을 등록
+    // 인스펙터에 표시하기 위해 타입들을 등록
+    app.register_type::<Person>();
+    app.register_type::<Worker>();
+    app.register_type::<Salary>();
 
     #[cfg(feature = "debug")]
     // Debug hierarchy inspector
@@ -42,6 +47,7 @@ fn add_player(
         Player::default(),
         Person::default(),
         Name::new("Player"),
+        Worker::default(),
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),
@@ -64,9 +70,16 @@ fn add_person(
         rand::random::<f32>() * 800.0 - 400.0,
         0.0,
     );
+    let random_salary = Salary {
+        amount: rand::random::<f32>() * 3000.0,
+        currency: "KRW".to_string(),
+    };
     commands.spawn((
         Person::default(),
         Name::new(name.to_string()),
+        Worker {
+            salary: random_salary,
+        },
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),

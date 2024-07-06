@@ -19,6 +19,47 @@ impl Default for Person {
     }
 }
 
+#[derive(Reflect, Component)]
+pub struct Worker {
+    pub salary: Salary,
+}
+
+impl Default for Worker {
+    fn default() -> Self {
+        Worker {
+            salary: Salary {
+                amount: 1000.0,
+                currency: "KRW".to_string(),
+            },
+        }
+    }
+}
+
+#[derive(Reflect, Component)]
+pub struct Salary {
+    pub amount: f32,
+    pub currency: String,
+}
+
+impl Default for Salary {
+    fn default() -> Self {
+        Salary {
+            amount: 0.0,
+            currency: "KRW".to_string(),
+        }
+    }
+}
+
+impl Salary {
+    pub fn in_man_won(&self) -> String {
+        format!("{}만원", self.amount)
+    }
+
+    pub fn in_won(&self) -> String {
+        format!("{}원", self.amount * 10000.0)
+    }
+}
+
 #[derive(Component)]
 pub struct Desk;
 
