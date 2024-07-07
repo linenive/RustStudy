@@ -19,10 +19,18 @@ impl Default for Person {
     }
 }
 
+#[derive(Reflect, Debug, Clone, Eq, PartialEq, Hash)]
+pub enum InteractionType {
+    Invalid,
+    Work,
+    Damage,
+}
+
 #[derive(Reflect, Component)]
 pub struct InteractionTarget {
     pub is_interactable: bool,
     pub target: Entity,
+    pub interaction_type: InteractionType,
 }
 
 #[derive(Reflect, Component)]
@@ -70,4 +78,14 @@ impl Salary {
 pub struct Desk;
 
 #[derive(Component)]
-pub struct Interactable;
+pub struct Interactable {
+    pub interaction_type: InteractionType,
+}
+
+impl Default for Interactable {
+    fn default() -> Self {
+        Interactable {
+            interaction_type: InteractionType::Invalid,
+        }
+    }
+}

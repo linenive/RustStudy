@@ -10,7 +10,7 @@ pub mod components;
 pub mod gui;
 pub mod player;
 
-use components::{Desk, Interactable, InteractionTarget, Person, Salary, Worker};
+use components::{Desk, Interactable, InteractionTarget, InteractionType, Person, Salary, Worker};
 use gui::components::StatusHUD;
 use player::Player;
 
@@ -42,6 +42,7 @@ fn add_system_entity(mut commands: Commands) {
         InteractionTarget {
             is_interactable: false,
             target: Entity::PLACEHOLDER,
+            interaction_type: InteractionType::Invalid,
         },
     ));
 }
@@ -90,7 +91,9 @@ fn add_person(
         Worker {
             salary: random_salary,
         },
-        Interactable,
+        Interactable {
+            interaction_type: InteractionType::Damage,
+        },
         MaterialMesh2dBundle {
             mesh: shape,
             material: materials.add(color),
@@ -109,7 +112,9 @@ fn add_desk(
     let color = Color::hsl(0.0, 0.0, 0.5);
     commands.spawn((
         Desk,
-        Interactable,
+        Interactable {
+            interaction_type: InteractionType::Work,
+        },
         Name::new("Desk"),
         MaterialMesh2dBundle {
             mesh: shape,

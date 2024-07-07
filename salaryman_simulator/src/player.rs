@@ -1,6 +1,6 @@
 use bevy::{input::*, prelude::*};
 
-use crate::components::{Interactable, InteractionTarget, Person};
+use crate::components::{Interactable, InteractionTarget, InteractionType, Person};
 use crate::gui::components::{InteractionHintUI, PopUpUI};
 
 #[derive(Component)]
@@ -29,7 +29,15 @@ pub fn player_movement(
         if keyboard_input.pressed(KeyCode::KeyE) {
             for (_, interact_target) in interactable_target_query.iter() {
                 if interact_target.is_interactable {
-                    person.san -= 10;
+                    match interact_target.interaction_type {
+                        InteractionType::Invalid => {}
+                        InteractionType::Work => {
+                            person.san -= 10;
+                        }
+                        InteractionType::Damage => {
+                            person.hp -= 10;
+                        }
+                    }
                 }
             }
         }
@@ -42,26 +50,28 @@ pub fn player_movement(
 
 pub fn player_check_collision(
     query: Query<(&Transform, &Player)>,
-    interactable_query: Query<(Entity, &Transform, &Name), With<Interactable>>,
+    interactable_query: Query<(Entity, &Interactable, &Transform, &Name)>,
     mut interaction_target_query: Query<(Entity, &mut InteractionTarget)>,
     mut interaction_hint: Query<(&mut Visibility, &mut Text, &InteractionHintUI)>,
 ) {
     for (player_transform, _) in query.iter() {
         let max_distance = 60.0;
         let mut closest_distance = max_distance;
-        let mut closest_target = Entity::PLACEHOLDER;
-        let mut closest_name = "".to_string();
+        let mut closest: (Entity, &Interactable, &Transform, &Name) = (
+            Entity::PLACEHOLDER,
+            &Interactable::default(),
+            &Transform::default(),
+            &Name::default(),
+        );
 
-        for (target, interactable_transform, name) in interactable_query.iter() {
+        for query in interactable_query.iter() {
+            let (_, _, interactable_transform, _) = query;
             let distance = player_transform
                 .translation
                 .distance(interactable_transform.translation);
             if distance < closest_distance {
                 closest_distance = distance;
-                closest_target = target;
-                closest_name = name
-                    .as_str()
-                    .to_string();
+                closest = query;
             }
         }
 
@@ -69,11 +79,15 @@ pub fn player_check_collision(
 
         // 인터랙션 가능할 만큼 충분히 가까운 대상이 존재함
         if closest_distance < max_distance {
+            let (closest_entity, closest_interactable, _, closest_name) = closest;
             for (_, mut interact_target) in interaction_target_query.iter_mut() {
                 interact_target.is_interactable = true;
 
-                if interact_target.target != closest_target {
-                    interact_target.target = closest_target;
+                if interact_target.target != closest_entity {
+                    interact_target.target = closest_entity;
+                    interact_target.interaction_type = closest_interactable
+                        .interaction_type
+                        .clone();
                     for (mut visibility, mut _text, _hint) in interaction_hint.iter_mut() {
                         *visibility = Visibility::Visible;
                         _text.sections[0].value =
