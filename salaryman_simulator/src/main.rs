@@ -11,23 +11,25 @@ pub mod gui;
 pub mod player;
 
 use components::{Desk, Interactable, InteractionTarget, InteractionType, Person, Salary, Worker};
-use gui::components::StatusHUD;
+use gui::components::{ChoiceUI, StatusHUD};
 use player::Player;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, HelloPlugin));
     // 인스펙터에 표시하기 위해 타입들을 등록
+    app.register_type::<Vec<String>>();
     app.register_type::<Person>();
     app.register_type::<Worker>();
     app.register_type::<Salary>();
+    app.register_type::<InteractionTarget>();
+    app.register_type::<ChoiceUI>();
 
     #[cfg(feature = "debug")]
     // Debug hierarchy inspector
     app.add_plugins(WorldInspectorPlugin::new());
     // Startup system (cameras)
     app.add_systems(Startup, sprite_setup);
-    app.add_systems(Update, player::player_movement);
     // Run the app
     app.run();
 }
@@ -42,6 +44,7 @@ fn add_system_entity(mut commands: Commands) {
         InteractionTarget {
             is_interactable: false,
             target: Entity::PLACEHOLDER,
+            target_transform: Transform::from_xyz(0.0, 0.0, 0.0),
             interaction_type: InteractionType::Invalid,
         },
     ));
@@ -92,7 +95,7 @@ fn add_person(
             salary: random_salary,
         },
         Interactable {
-            interaction_type: InteractionType::Damage,
+            interaction_type: InteractionType::SalaryMan,
         },
         MaterialMesh2dBundle {
             mesh: shape,
@@ -204,6 +207,9 @@ impl Plugin for HelloPlugin {
                     player::player_check_collision,
                     update_hud,
                     gui::update_pop_up,
+                    gui::update_choice_ui,
+                    player::player_movement,
+                    player::interact,
                     player::dead_player,
                 )
                     .chain(),

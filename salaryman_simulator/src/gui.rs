@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 pub mod components;
 
-use components::{InteractionHintUI, PopUpUI, StatusHUD};
+use components::{ChoiceUI, InteractionHintUI, PopUpUI, StatusHUD};
 
 #[derive(Resource)]
 pub struct MyFont(Handle<Font>);
@@ -17,6 +17,7 @@ pub fn add_gui(mut commands: Commands, font: Res<MyFont>) {
     add_text(&mut commands, &font);
     add_hud(&mut commands, &font);
     add_pop_up(&mut commands, &font);
+    add_choice_ui(&mut commands, &font);
 }
 
 // 게임 오버 팝업을 업데이트
@@ -40,6 +41,25 @@ pub fn update_pop_up(
                 .color = Color::RED;
             // 회전
             _transform.rotation = Quat::from_rotation_z((time.elapsed_seconds() * 2.0).tan());
+        }
+    }
+}
+
+pub fn update_choice_ui(mut query: Query<(&mut Text, &ChoiceUI), With<ChoiceUI>>) {
+    for (mut _text, _choice) in query.iter_mut() {
+        for (index, choice) in _choice
+            .choices
+            .iter()
+            .enumerate()
+        {
+            if _text
+                .sections
+                .len()
+                <= index
+            {
+                continue;
+            }
+            _text.sections[index].value = choice.clone();
         }
     }
 }
@@ -118,25 +138,29 @@ fn add_hud(commands: &mut Commands, font: &Res<MyFont>) {
 }
 
 fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
-    commands.spawn((
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 20.0,
-                color: Color::WHITE,
-                font: font
-                    .0
-                    .clone(),
-                ..Default::default()
-            },
-        )
-        .with_text_justify(JustifyText::Right)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            right: Val::Px(10.0),
-            top: Val::Px(10.0),
-            ..Default::default()
-        }),
-        StatusHUD,
-    ));
+    let text_style = TextStyle {
+        font_size: 30.0,
+        color: Color::WHITE,
+        font: font
+            .0
+            .clone(),
+        ..Default::default()
+    };
+    let text_justification = JustifyText::Center;
+
+    let mut text_bundle = Text2dBundle {
+        text: Text::from_section("translation", text_style.clone())
+            .with_justify(text_justification),
+        ..default()
+    };
+
+    text_bundle.visibility = Visibility::Hidden;
+
+    let bundle = (
+        text_bundle,
+        ChoiceUI {
+            choices: vec!["선택지 1".to_string(), "선택지 2".to_string()],
+        },
+    );
+    commands.spawn(bundle);
 }

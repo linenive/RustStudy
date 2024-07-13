@@ -1,17 +1,63 @@
 use bevy::{input::*, prelude::*};
 
 use crate::components::{Interactable, InteractionTarget, InteractionType, Person};
-use crate::gui::components::{InteractionHintUI, PopUpUI};
+use crate::gui::components::{ChoiceUI, InteractionHintUI, PopUpUI};
 
 #[derive(Component)]
 pub struct Player;
 
-pub fn player_movement(
+pub fn interact(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     interactable_target_query: Query<(Entity, &InteractionTarget)>,
-    mut query: Query<(&mut Transform, &mut Person, &Player)>,
+    mut query: Query<(&mut Person, &Player)>,
+    mut choice_ui: Query<(&mut Visibility, &mut Transform, &mut ChoiceUI)>,
 ) {
-    for (mut transform, mut person, _) in query.iter_mut() {
+    for (mut person, _) in query.iter_mut() {
+        if keyboard_input.just_pressed(KeyCode::KeyE) {
+            for (_, interact_target) in interactable_target_query.iter() {
+                if interact_target.is_interactable {
+                    match interact_target.interaction_type {
+                        InteractionType::Invalid => {}
+                        InteractionType::Work => {
+                            person.san -= 10;
+                        }
+                        InteractionType::Damage => {
+                            person.hp -= 10;
+                        }
+                        InteractionType::SalaryMan => {
+                            for (mut visibility, mut _transform, mut _choice) in
+                                choice_ui.iter_mut()
+                            {
+                                *visibility = Visibility::Visible;
+
+                                _transform
+                                    .translation
+                                    .x = interact_target
+                                    .target_transform
+                                    .translation
+                                    .x
+                                    + 50.0;
+                                _transform
+                                    .translation
+                                    .y = interact_target
+                                    .target_transform
+                                    .translation
+                                    .y
+                                    - 50.0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn player_movement(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut query: Query<(&mut Transform, &mut Person, &Player), With<Player>>,
+) {
+    for (mut transform, person, _) in query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
         if keyboard_input.pressed(KeyCode::KeyW) {
@@ -26,21 +72,6 @@ pub fn player_movement(
         if keyboard_input.pressed(KeyCode::KeyD) {
             direction.x += 1.0;
         }
-        if keyboard_input.pressed(KeyCode::KeyE) {
-            for (_, interact_target) in interactable_target_query.iter() {
-                if interact_target.is_interactable {
-                    match interact_target.interaction_type {
-                        InteractionType::Invalid => {}
-                        InteractionType::Work => {
-                            person.san -= 10;
-                        }
-                        InteractionType::Damage => {
-                            person.hp -= 10;
-                        }
-                    }
-                }
-            }
-        }
 
         if direction.length_squared() > 0.0 {
             transform.translation += direction.normalize() * person.speed * 0.02;
@@ -50,7 +81,7 @@ pub fn player_movement(
 
 pub fn player_check_collision(
     query: Query<(&Transform, &Player)>,
-    interactable_query: Query<(Entity, &Interactable, &Transform, &Name)>,
+    interactable_query: Query<(Entity, &Interactable, &Transform, &Name), With<Interactable>>,
     mut interaction_target_query: Query<(Entity, &mut InteractionTarget)>,
     mut interaction_hint: Query<(&mut Visibility, &mut Text, &InteractionHintUI)>,
 ) {
@@ -79,12 +110,13 @@ pub fn player_check_collision(
 
         // 인터랙션 가능할 만큼 충분히 가까운 대상이 존재함
         if closest_distance < max_distance {
-            let (closest_entity, closest_interactable, _, closest_name) = closest;
+            let (closest_entity, closest_interactable, transform, closest_name) = closest;
             for (_, mut interact_target) in interaction_target_query.iter_mut() {
                 interact_target.is_interactable = true;
 
                 if interact_target.target != closest_entity {
                     interact_target.target = closest_entity;
+                    interact_target.target_transform = transform.clone();
                     interact_target.interaction_type = closest_interactable
                         .interaction_type
                         .clone();

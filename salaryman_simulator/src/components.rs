@@ -24,12 +24,14 @@ pub enum InteractionType {
     Invalid,
     Work,
     Damage,
+    SalaryMan,
 }
 
 #[derive(Reflect, Component)]
 pub struct InteractionTarget {
     pub is_interactable: bool,
     pub target: Entity,
+    pub target_transform: Transform,
     pub interaction_type: InteractionType,
 }
 
