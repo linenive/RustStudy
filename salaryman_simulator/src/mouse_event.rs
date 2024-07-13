@@ -66,26 +66,26 @@ pub fn mouse_event(
     let mut target_transform = Transform::from_xyz(0.0, 0.0, 0.0);
 
     let mut is_hovered = false;
-    for q_transform in param_set
+    for selectable_transform in param_set
         .p1()
         .iter()
     {
         let x = q_mouse_input
             .world_position
             .x
-            - q_transform
+            - selectable_transform
                 .translation
                 .x;
         let y = q_mouse_input
             .world_position
             .y
-            - q_transform
+            - selectable_transform
                 .translation
                 .y;
 
         if x.abs() < 50.0 && y.abs() < 50.0 {
             println!("Mouse is on the object!");
-            target_transform = q_transform.clone();
+            target_transform = selectable_transform.clone();
             is_hovered = true;
             break;
         }

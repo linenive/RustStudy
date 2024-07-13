@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod components;
+use crate::components::MouseSelectable;
 
 use components::{ChoiceItem, ChoiceUI, InteractionHintUI, PopUpUI, StatusHUD};
 
@@ -66,6 +67,7 @@ pub fn update_choice_ui(
                     .len()
             {
                 *_item_visibility = Visibility::Hidden;
+                _transform.translation = Transform::from_xyz(10000.0, 10000.0, 0.0).translation;
                 continue;
             }
 
@@ -187,12 +189,16 @@ fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
     for index in 0..item_number {
         let mut text_bundle = Text2dBundle {
             text: Text::from_section("_", text_style.clone()).with_justify(text_justification),
-            transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            transform: Transform::from_xyz(10000.0, 10000.0, 10.0),
             ..default()
         };
         text_bundle.visibility = Visibility::Hidden;
 
-        let choice_item_bundle = (text_bundle, ChoiceItem { index });
+        let choice_item_bundle = (
+            text_bundle,
+            ChoiceItem { index },
+            MouseSelectable::default(),
+        );
 
         commands.spawn(choice_item_bundle);
     }
