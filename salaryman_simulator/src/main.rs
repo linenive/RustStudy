@@ -1,6 +1,7 @@
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+    window::PrimaryWindow,
 };
 
 #[cfg(feature = "debug")]
@@ -8,6 +9,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub mod components;
 pub mod gui;
+pub mod mouse_event;
 pub mod player;
 
 use components::{Desk, Interactable, InteractionTarget, InteractionType, Person, Salary, Worker};
@@ -168,16 +170,30 @@ fn update_hud(
     mut query: Query<&mut Text, With<StatusHUD>>,
     player_query: Query<&Person, With<Player>>,
     time: Res<Time>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     for mut _text in query.iter_mut() {
         for player in player_query.iter() {
-            _text.sections[0].value = format!("체력: {}\n정신력: {}", player.hp, player.san);
+            _text.sections[0].value = format!("체력: {}\n정신력: {}\n", player.hp, player.san);
             _text.sections[0]
                 .value
                 .push_str(&format!(
-                    "\n지난 시간: {:.2}",
+                    "지난 시간: {:.1}\n",
                     time.elapsed_seconds() as f32
                 ));
+        }
+
+        if let Some(position) = q_windows
+            .single()
+            .cursor_position()
+        {
+            _text.sections[0]
+                .value
+                .push_str(format!("Cursor [{:.1}, {:.1}]", position.x, position.y).as_str());
+        } else {
+            _text.sections[0]
+                .value
+                .push_str("Cursor is not in the game window.");
         }
     }
 }
@@ -211,6 +227,7 @@ impl Plugin for HelloPlugin {
                     player::player_movement,
                     player::interact,
                     player::dead_player,
+                    mouse_event::mouse_motion,
                 )
                     .chain(),
             );

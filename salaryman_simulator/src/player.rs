@@ -98,8 +98,6 @@ pub fn player_check_collision(
             }
         }
 
-        println!("Closest Daistance: {}", closest_distance);
-
         // 인터랙션 가능할 만큼 충분히 가까운 대상이 존재함
         if closest_distance < max_distance {
             let (closest_entity, closest_interactable, transform, closest_name) = closest;
