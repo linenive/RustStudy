@@ -16,4 +16,11 @@ pub struct StatusHUD;
 #[derive(Component, Reflect)]
 pub struct ChoiceUI {
     pub choices: Vec<String>,
+    pub is_visible: bool,
+    pub tranform: Transform,
+}
+
+#[derive(Component)]
+pub struct ChoiceItem {
+    pub index: usize,
 }

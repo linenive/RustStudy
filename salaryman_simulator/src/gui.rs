@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 pub mod components;
 
-use components::{ChoiceUI, InteractionHintUI, PopUpUI, StatusHUD};
+use components::{ChoiceItem, ChoiceUI, InteractionHintUI, PopUpUI, StatusHUD};
 
 #[derive(Resource)]
 pub struct MyFont(Handle<Font>);
@@ -45,21 +45,48 @@ pub fn update_pop_up(
     }
 }
 
-pub fn update_choice_ui(mut query: Query<(&mut Text, &ChoiceUI), With<ChoiceUI>>) {
-    for (mut _text, _choice) in query.iter_mut() {
-        for (index, choice) in _choice
-            .choices
-            .iter()
-            .enumerate()
+pub fn update_choice_ui(
+    mut query: Query<&ChoiceUI>,
+    mut choice_item_query: Query<
+        (&mut Text, &mut Visibility, &mut Transform, &ChoiceItem),
+        With<ChoiceItem>,
+    >,
+) {
+    for _choice in query.iter_mut() {
+        if _choice.is_visible == false {
+            return;
+        }
+
+        for (mut _text, mut _item_visibility, mut _transform, _choice_item) in
+            choice_item_query.iter_mut()
         {
-            if _text
-                .sections
-                .len()
-                <= index
+            if _choice_item.index
+                >= _choice
+                    .choices
+                    .len()
             {
+                *_item_visibility = Visibility::Hidden;
                 continue;
             }
-            _text.sections[index].value = choice.clone();
+
+            _text.sections[0].value = _choice.choices[_choice_item.index].clone();
+            *_item_visibility = Visibility::Visible;
+
+            _transform
+                .translation
+                .x = _choice
+                .tranform
+                .translation
+                .x
+                + 80.0;
+            _transform
+                .translation
+                .y = _choice
+                .tranform
+                .translation
+                .y
+                - 50.0
+                - _choice_item.index as f32 * 30.0;
         }
     }
 }
@@ -146,21 +173,27 @@ fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
             .clone(),
         ..Default::default()
     };
-    let text_justification = JustifyText::Center;
+    let text_justification = JustifyText::Left;
 
-    let mut text_bundle = Text2dBundle {
-        text: Text::from_section("translation", text_style.clone())
-            .with_justify(text_justification),
-        ..default()
+    let item_number = 8;
+
+    let bundle = ChoiceUI {
+        choices: vec!["선택지 1".to_string(), "선택지 2".to_string()],
+        is_visible: false,
+        tranform: Transform::from_xyz(0.0, 0.0, 0.0),
     };
-
-    text_bundle.visibility = Visibility::Hidden;
-
-    let bundle = (
-        text_bundle,
-        ChoiceUI {
-            choices: vec!["선택지 1".to_string(), "선택지 2".to_string()],
-        },
-    );
     commands.spawn(bundle);
+
+    for index in 0..item_number {
+        let mut text_bundle = Text2dBundle {
+            text: Text::from_section("_", text_style.clone()).with_justify(text_justification),
+            transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            ..default()
+        };
+        text_bundle.visibility = Visibility::Hidden;
+
+        let choice_item_bundle = (text_bundle, ChoiceItem { index });
+
+        commands.spawn(choice_item_bundle);
+    }
 }

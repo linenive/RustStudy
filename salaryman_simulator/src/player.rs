@@ -10,7 +10,7 @@ pub fn interact(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     interactable_target_query: Query<(Entity, &InteractionTarget)>,
     mut query: Query<(&mut Person, &Player)>,
-    mut choice_ui: Query<(&mut Visibility, &mut Transform, &mut ChoiceUI)>,
+    mut choice_ui: Query<&mut ChoiceUI>,
 ) {
     for (mut person, _) in query.iter_mut() {
         if keyboard_input.just_pressed(KeyCode::KeyE) {
@@ -25,25 +25,17 @@ pub fn interact(
                             person.hp -= 10;
                         }
                         InteractionType::SalaryMan => {
-                            for (mut visibility, mut _transform, mut _choice) in
-                                choice_ui.iter_mut()
-                            {
-                                *visibility = Visibility::Visible;
-
-                                _transform
-                                    .translation
-                                    .x = interact_target
+                            for mut _choice in choice_ui.iter_mut() {
+                                _choice.is_visible = true;
+                                _choice.tranform = interact_target
                                     .target_transform
-                                    .translation
-                                    .x
-                                    + 50.0;
-                                _transform
-                                    .translation
-                                    .y = interact_target
-                                    .target_transform
-                                    .translation
-                                    .y
-                                    - 50.0;
+                                    .clone();
+                                _choice.choices = vec![
+                                    "사원증 보기".to_string(),
+                                    "연봉 물어보기".to_string(),
+                                    "직군 물어보기".to_string(),
+                                    "직급 물어보기".to_string(),
+                                ];
                             }
                         }
                     }
