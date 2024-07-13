@@ -1,8 +1,6 @@
 use bevy::{
-    input::mouse,
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-    window::PrimaryWindow,
 };
 
 #[cfg(feature = "debug")]
@@ -214,6 +212,15 @@ fn update_hud(
         ));
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct WorldUpdateSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct GUISet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct InputSet;
+
 pub struct HelloPlugin;
 
 impl Plugin for HelloPlugin {
@@ -235,19 +242,26 @@ impl Plugin for HelloPlugin {
             .add_systems(
                 Update,
                 (
-                    update_people,
-                    greet_people,
-                    player::player_check_collision,
-                    update_hud,
-                    gui::update_pop_up,
-                    gui::update_choice_ui,
-                    player::player_movement,
-                    player::interact,
-                    player::dead_player,
-                    mouse_event::listen_mouse_input,
-                    mouse_event::mouse_event,
-                )
-                    .chain(),
+                    (
+                        greet_people,
+                        update_people,
+                        player::player_check_collision,
+                        player::player_movement,
+                        player::interact,
+                        player::dead_player,
+                    )
+                        .in_set(WorldUpdateSet),
+                    (gui::update_pop_up, gui::update_choice_ui, update_hud).in_set(GUISet),
+                    (mouse_event::listen_mouse_input, mouse_event::mouse_event).in_set(InputSet),
+                ),
+            )
+            .configure_sets(
+                Update,
+                (
+                    WorldUpdateSet,
+                    GUISet.after(WorldUpdateSet),
+                    InputSet.after(GUISet),
+                ),
             );
     }
 }

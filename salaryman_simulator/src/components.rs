@@ -117,3 +117,6 @@ impl Default for MouseInput {
         }
     }
 }
+
+#[derive(Reflect, Component)]
+pub struct MouseHoverHint;

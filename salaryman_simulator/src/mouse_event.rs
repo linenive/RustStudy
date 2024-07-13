@@ -1,10 +1,27 @@
 use bevy::prelude::*;
+use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::window::PrimaryWindow;
 
-use crate::components::{MouseInput, MouseSelectable};
+use crate::components::{MouseHoverHint, MouseInput, MouseSelectable};
 
-pub fn add_mouse_input(mut commands: Commands) {
-    commands.spawn((MouseInput::default(),));
+pub fn add_mouse_input(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    commands.spawn(MouseInput::default());
+
+    let shape = Mesh2dHandle(meshes.add(Rectangle::new(50.0, 50.0)));
+    let color = Color::rgba(1.0, 1.0, 1.0, 0.1);
+    commands.spawn((
+        MouseHoverHint,
+        MaterialMesh2dBundle {
+            mesh: shape,
+            material: materials.add(color),
+            transform: Transform::from_xyz(0.0, 0.0, 1.0),
+            ..default()
+        },
+    ));
 }
 
 pub fn listen_mouse_input(
@@ -39,27 +56,60 @@ pub fn listen_mouse_input(
 
 pub fn mouse_event(
     q_mouse_inputs: Query<&MouseInput>,
-    mut query: Query<&Transform, With<MouseSelectable>>,
+    mut param_set: ParamSet<(
+        Query<(&mut Transform, &mut Visibility), With<MouseHoverHint>>,
+        Query<&Transform, With<MouseSelectable>>,
+    )>,
 ) {
     let q_mouse_input = q_mouse_inputs.single();
 
-    for transform in query.iter() {
+    let mut target_transform = Transform::from_xyz(0.0, 0.0, 0.0);
+
+    let mut is_hovered = false;
+    for q_transform in param_set
+        .p1()
+        .iter()
+    {
         let x = q_mouse_input
             .world_position
             .x
-            - transform
+            - q_transform
                 .translation
                 .x;
         let y = q_mouse_input
             .world_position
             .y
-            - transform
+            - q_transform
                 .translation
                 .y;
 
         if x.abs() < 50.0 && y.abs() < 50.0 {
             println!("Mouse is on the object!");
-            continue;
+            target_transform = q_transform.clone();
+            is_hovered = true;
+            break;
+        }
+    }
+
+    for (mut hint_transform, mut hint_visibility) in param_set
+        .p0()
+        .iter_mut()
+    {
+        if !is_hovered {
+            *hint_visibility = Visibility::Hidden;
+            return;
+        } else {
+            *hint_visibility = Visibility::Visible;
+            hint_transform
+                .translation
+                .x = target_transform
+                .translation
+                .x;
+            hint_transform
+                .translation
+                .y = target_transform
+                .translation
+                .y;
         }
     }
 }
