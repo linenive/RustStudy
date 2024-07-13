@@ -1,4 +1,5 @@
 use bevy::{
+    input::mouse,
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     window::PrimaryWindow,
@@ -12,7 +13,10 @@ pub mod gui;
 pub mod mouse_event;
 pub mod player;
 
-use components::{Desk, Interactable, InteractionTarget, InteractionType, Person, Salary, Worker};
+use components::{
+    Desk, Interactable, InteractionTarget, InteractionType, MouseInput, MouseSelectable, Person,
+    Salary, Worker,
+};
 use gui::components::{ChoiceUI, StatusHUD};
 use player::Player;
 
@@ -105,6 +109,7 @@ fn add_person(
             transform: random_transform,
             ..default()
         },
+        MouseSelectable::default(),
     ));
 }
 
@@ -167,35 +172,46 @@ fn update_people(mut query: Query<&mut Person>) {
 
 // 캐릭터의 상태를 표시하는 HUD
 fn update_hud(
-    mut query: Query<&mut Text, With<StatusHUD>>,
+    mut huds: Query<&mut Text, With<StatusHUD>>,
     player_query: Query<&Person, With<Player>>,
     time: Res<Time>,
-    q_windows: Query<&Window, With<PrimaryWindow>>,
+    q_mouse_inputs: Query<&MouseInput>,
 ) {
-    for mut _text in query.iter_mut() {
-        for player in player_query.iter() {
-            _text.sections[0].value = format!("체력: {}\n정신력: {}\n", player.hp, player.san);
-            _text.sections[0]
-                .value
-                .push_str(&format!(
-                    "지난 시간: {:.1}\n",
-                    time.elapsed_seconds() as f32
-                ));
-        }
+    let mut _text = huds.single_mut();
 
-        if let Some(position) = q_windows
-            .single()
-            .cursor_position()
-        {
-            _text.sections[0]
-                .value
-                .push_str(format!("Cursor [{:.1}, {:.1}]", position.x, position.y).as_str());
-        } else {
-            _text.sections[0]
-                .value
-                .push_str("Cursor is not in the game window.");
-        }
+    for player in player_query.iter() {
+        _text.sections[0].value = format!("체력: {}\n정신력: {}\n", player.hp, player.san);
+        _text.sections[0]
+            .value
+            .push_str(&format!(
+                "지난 시간: {:.1}\n",
+                time.elapsed_seconds() as f32
+            ));
     }
+
+    let q_mouse_input = q_mouse_inputs.single();
+    _text.sections[0]
+        .value
+        .push_str(&format!(
+            "마우스 위치: ({:.1}, {:.1})\n",
+            q_mouse_input
+                .camera_position
+                .x,
+            q_mouse_input
+                .camera_position
+                .y
+        ));
+    _text.sections[0]
+        .value
+        .push_str(&format!(
+            "월드 위치: ({:.1}, {:.1})\n",
+            q_mouse_input
+                .world_position
+                .x,
+            q_mouse_input
+                .world_position
+                .y
+        ));
 }
 
 pub struct HelloPlugin;
@@ -212,6 +228,7 @@ impl Plugin for HelloPlugin {
                     add_desk,
                     gui::setup_font,
                     gui::add_gui,
+                    mouse_event::add_mouse_input,
                 )
                     .chain(),
             )
@@ -227,7 +244,8 @@ impl Plugin for HelloPlugin {
                     player::player_movement,
                     player::interact,
                     player::dead_player,
-                    mouse_event::mouse_motion,
+                    mouse_event::listen_mouse_input,
+                    mouse_event::mouse_event,
                 )
                     .chain(),
             );

@@ -91,3 +91,29 @@ impl Default for Interactable {
         }
     }
 }
+
+#[derive(Reflect, Component)]
+pub struct MouseSelectable {
+    pub is_selected: bool,
+}
+
+impl Default for MouseSelectable {
+    fn default() -> Self {
+        MouseSelectable { is_selected: false }
+    }
+}
+
+#[derive(Reflect, Component)]
+pub struct MouseInput {
+    pub camera_position: Vec2,
+    pub world_position: Vec2,
+}
+
+impl Default for MouseInput {
+    fn default() -> Self {
+        MouseInput {
+            camera_position: Vec2::new(0.0, 0.0),
+            world_position: Vec2::new(0.0, 0.0),
+        }
+    }
+}
