@@ -12,8 +12,7 @@ pub mod mouse_event;
 pub mod player;
 
 use components::{
-    Desk, Interactable, InteractionTarget, InteractionType, MouseInput, MouseSelectable, Person,
-    Salary, Worker,
+    CurrentHovered, Desk, Interactable, InteractionTarget, InteractionType, MouseInput, MouseSelectable, Person, Salary, Worker
 };
 use gui::components::{ChoiceUI, StatusHUD};
 use player::Player;
@@ -50,6 +49,12 @@ fn add_system_entity(mut commands: Commands) {
             target: Entity::PLACEHOLDER,
             target_transform: Transform::from_xyz(0.0, 0.0, 0.0),
             interaction_type: InteractionType::Invalid,
+        },
+    ));
+    commands.spawn((
+        Name::new("CurrentHovered"),
+        CurrentHovered {
+            selectable: None,
         },
     ));
 }
@@ -180,7 +185,7 @@ fn update_hud(
     player_query: Query<&Person, With<Player>>,
     time: Res<Time>,
     q_mouse_inputs: Query<&MouseInput>,
-    q_mouse_selectables: Query<&MouseSelectable>,
+    q_current_hovered: Query<&CurrentHovered>,
 ) {
     let mut _text = huds.single_mut();
 
@@ -217,6 +222,17 @@ fn update_hud(
                 .world_position
                 .y
         ));
+    
+    for current_hovered in q_current_hovered.iter() {
+        if let Some(selectable) = &current_hovered.selectable {
+            _text.sections[0]
+                .value
+                .push_str(&format!(
+                    "마우스 오버: {:?}\n",
+                    selectable.display_name
+                ));
+        }
+    }
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
