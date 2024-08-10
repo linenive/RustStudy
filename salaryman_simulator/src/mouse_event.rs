@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::window::PrimaryWindow;
 
-use crate::components::{MouseHoverHint, MouseInput, MouseSelectable};
+use crate::components::{CurrentHovered, MouseHoverHint, MouseInput, MouseSelectable};
 
 pub fn add_mouse_input(
     mut commands: Commands,
@@ -56,25 +56,17 @@ pub fn listen_mouse_input(
 
 pub fn mouse_event(
     q_mouse_inputs: Query<&MouseInput>,
-    mut param_set: ParamSet<(
-        Query<(&mut Transform, &mut Visibility), With<MouseHoverHint>>,
-        Query<(&Transform, &MouseSelectable)>,
-    )>,
+    q_selectables: Query<(&Transform, &MouseSelectable), Without<MouseHoverHint>>,
+    mut q_hint: Query<(&mut Transform, &mut Visibility), With<MouseHoverHint>>,
+    mut q_current_hovered: Query<&mut CurrentHovered>,
 ) {
     let q_mouse_input = q_mouse_inputs.single();
 
     let mut target_transform = Transform::from_xyz(0.0, 0.0, 0.0);
-    let mut select_rect = Rect::default();
+    let mut hovered_selectable: Option<&MouseSelectable> = None;
 
-    let mut is_hovered = false;
-    for (selectable_transform, selectable) in param_set
-        .p1()
-        .iter()
+    for (selectable_transform, selectable) in q_selectables.iter()
     {
-        select_rect = selectable
-            .select_rect
-            .clone();
-
         let x = q_mouse_input
             .world_position
             .x
@@ -88,26 +80,32 @@ pub fn mouse_event(
                 .translation
                 .y;
 
-        if x > select_rect.min.x * 8.0
-            && x < select_rect.max.x * 8.0
-            && y > select_rect.min.y * 8.0
-            && y < select_rect.max.y * 8.0
+        if x > selectable.select_rect.min.x * 8.0
+            && x < selectable.select_rect.max.x * 8.0
+            && y > selectable.select_rect.min.y * 8.0
+            && y < selectable.select_rect.max.y * 8.0
         {
             println!("Mouse is on the object!");
             target_transform = selectable_transform.clone();
-            is_hovered = true;
+            hovered_selectable = Some(selectable);
             break;
         }
     }
 
-    for (mut hint_transform, mut hint_visibility) in param_set
-        .p0()
-        .iter_mut()
+    for mut current_hovered in q_current_hovered.iter_mut()
     {
-        if !is_hovered {
-            *hint_visibility = Visibility::Hidden;
-            return;
+        if let Some(target_selectable) = hovered_selectable {
+            current_hovered
+                .selectable = Some(target_selectable.clone());
         } else {
+            current_hovered
+                .selectable = None;
+        }
+    }
+
+    for (mut hint_transform, mut hint_visibility) in q_hint.iter_mut()
+    {
+        if let Some(target_selectable) = hovered_selectable {
             *hint_visibility = Visibility::Visible;
 
             // 위치를 선택 대상과 동일하게 업데이트
@@ -125,11 +123,15 @@ pub fn mouse_event(
             // 크기를 선택 대상과 동일하게 업데이트
             hint_transform
                 .scale
-                .x = select_rect.width() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
+                .x = target_selectable.select_rect.width() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
 
             hint_transform
                 .scale
-                .y = select_rect.height() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
+                .y = target_selectable.select_rect.height() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
+        }
+        else {
+            *hint_visibility = Visibility::Hidden;
+            return;
         }
     }
 }

@@ -178,9 +178,12 @@ fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
     let text_justification = JustifyText::Left;
 
     let item_number = 8;
+    let choices_text = vec![
+        "선택지 1".to_string(), "선택지 2".to_string(), "선택지 3".to_string(), "선택지 4".to_string(),
+        "선택지 5".to_string(), "선택지 6".to_string(), "선택지 7".to_string(), "선택지 8".to_string(),];
 
     let bundle = ChoiceUI {
-        choices: vec!["선택지 1".to_string(), "선택지 2".to_string()],
+        choices: choices_text.clone(),
         is_visible: false,
         tranform: Transform::from_xyz(0.0, 0.0, 0.0),
     };
@@ -198,7 +201,7 @@ fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
             text_bundle,
             ChoiceItem { index },
             MouseSelectable {
-                is_selected: false,
+                display_name: choices_text[index].clone(),
                 select_rect: Rect {
                     min: Vec2::new(-18.0, -3.0),
                     max: Vec2::new(18.0, 3.0),

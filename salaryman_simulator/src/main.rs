@@ -108,7 +108,7 @@ fn add_person(
             ..default()
         },
         MouseSelectable {
-            is_selected: false,
+            display_name: name.to_string(),
             select_rect: Rect {
                 min: Vec2::new(-5.0, -5.0),
                 max: Vec2::new(5.0, 5.0),
@@ -180,6 +180,7 @@ fn update_hud(
     player_query: Query<&Person, With<Player>>,
     time: Res<Time>,
     q_mouse_inputs: Query<&MouseInput>,
+    q_mouse_selectables: Query<&MouseSelectable>,
 ) {
     let mut _text = huds.single_mut();
 
