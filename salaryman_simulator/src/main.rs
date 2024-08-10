@@ -107,7 +107,13 @@ fn add_person(
             transform: random_transform,
             ..default()
         },
-        MouseSelectable::default(),
+        MouseSelectable {
+            is_selected: false,
+            select_rect: Rect {
+                min: Vec2::new(-5.0, -5.0),
+                max: Vec2::new(5.0, 5.0),
+            },
+        },
     ));
 }
 

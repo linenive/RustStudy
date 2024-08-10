@@ -92,14 +92,19 @@ impl Default for Interactable {
     }
 }
 
+/// 마우스로 클릭 가능한 오브젝트를 나타내며, 마우스 오버 시 MouseHoverHint를 표시합니다.
 #[derive(Reflect, Component)]
 pub struct MouseSelectable {
     pub is_selected: bool,
+    pub select_rect: Rect,
 }
 
 impl Default for MouseSelectable {
     fn default() -> Self {
-        MouseSelectable { is_selected: false }
+        MouseSelectable {
+            is_selected: false,
+            select_rect: Rect::default(),
+        }
     }
 }
 

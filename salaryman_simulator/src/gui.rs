@@ -197,7 +197,13 @@ fn add_choice_ui(commands: &mut Commands, font: &Res<MyFont>) {
         let choice_item_bundle = (
             text_bundle,
             ChoiceItem { index },
-            MouseSelectable::default(),
+            MouseSelectable {
+                is_selected: false,
+                select_rect: Rect {
+                    min: Vec2::new(-18.0, -3.0),
+                    max: Vec2::new(18.0, 3.0),
+                },
+            },
         );
 
         commands.spawn(choice_item_bundle);

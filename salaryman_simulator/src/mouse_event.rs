@@ -58,18 +58,23 @@ pub fn mouse_event(
     q_mouse_inputs: Query<&MouseInput>,
     mut param_set: ParamSet<(
         Query<(&mut Transform, &mut Visibility), With<MouseHoverHint>>,
-        Query<&Transform, With<MouseSelectable>>,
+        Query<(&Transform, &MouseSelectable)>,
     )>,
 ) {
     let q_mouse_input = q_mouse_inputs.single();
 
     let mut target_transform = Transform::from_xyz(0.0, 0.0, 0.0);
+    let mut select_rect = Rect::default();
 
     let mut is_hovered = false;
-    for selectable_transform in param_set
+    for (selectable_transform, selectable) in param_set
         .p1()
         .iter()
     {
+        select_rect = selectable
+            .select_rect
+            .clone();
+
         let x = q_mouse_input
             .world_position
             .x
@@ -83,7 +88,11 @@ pub fn mouse_event(
                 .translation
                 .y;
 
-        if x.abs() < 50.0 && y.abs() < 50.0 {
+        if x > select_rect.min.x * 8.0
+            && x < select_rect.max.x * 8.0
+            && y > select_rect.min.y * 8.0
+            && y < select_rect.max.y * 8.0
+        {
             println!("Mouse is on the object!");
             target_transform = selectable_transform.clone();
             is_hovered = true;
@@ -100,6 +109,8 @@ pub fn mouse_event(
             return;
         } else {
             *hint_visibility = Visibility::Visible;
+
+            // 위치를 선택 대상과 동일하게 업데이트
             hint_transform
                 .translation
                 .x = target_transform
@@ -110,6 +121,15 @@ pub fn mouse_event(
                 .y = target_transform
                 .translation
                 .y;
+
+            // 크기를 선택 대상과 동일하게 업데이트
+            hint_transform
+                .scale
+                .x = select_rect.width() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
+
+            hint_transform
+                .scale
+                .y = select_rect.height() * 0.1; // 화면 배율에 따라 조정해야겠지만 지금은 임시
         }
     }
 }
